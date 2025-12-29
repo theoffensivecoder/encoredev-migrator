@@ -12,3 +12,5 @@ RUN go build -o encore-migrator cmd/migrate/migrate.go
 FROM alpine:latest
 
 COPY --from=builder /app/encore-migrator /encore-migrator
+
+ENTRYPOINT ["/encore-migrator"]
