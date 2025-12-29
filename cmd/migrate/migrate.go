@@ -13,6 +13,7 @@ import (
 	"github.com/theoffensivecoder/encoredev-migrator/internal/config"
 	"github.com/theoffensivecoder/encoredev-migrator/internal/discovery"
 	"github.com/theoffensivecoder/encoredev-migrator/internal/logging"
+	"github.com/theoffensivecoder/encoredev-migrator/internal/manifest"
 	"github.com/theoffensivecoder/encoredev-migrator/internal/migration"
 	"github.com/theoffensivecoder/encoredev-migrator/internal/types"
 )
@@ -75,6 +76,7 @@ func Run(ctx context.Context, args []string) error {
 			statusCommand(),
 			listCommand(),
 			forceCommand(),
+			generateManifestCommand(),
 		},
 	}
 
@@ -176,6 +178,58 @@ func forceCommand() *cli.Command {
 			return forceVersion(ctx, cmd)
 		},
 	}
+}
+
+func generateManifestCommand() *cli.Command {
+	return &cli.Command{
+		Name:  "generate-manifest",
+		Usage: "Generate a manifest file from discovered databases",
+		Flags: []cli.Flag{
+			&cli.StringFlag{
+				Name:     "output",
+				Aliases:  []string{"o"},
+				Usage:    "Output manifest path (format auto-detected from extension)",
+				Required: true,
+			},
+			&cli.StringFlag{
+				Name:  "copy-to",
+				Usage: "Copy migration files to this directory",
+			},
+			&cli.StringFlag{
+				Name:  "format",
+				Usage: "Output format: yaml or json (default: auto-detect from extension)",
+			},
+		},
+		Action: func(ctx context.Context, cmd *cli.Command) error {
+			return generateManifest(ctx, cmd)
+		},
+	}
+}
+
+func generateManifest(ctx context.Context, cmd *cli.Command) error {
+	appPath := cmd.String("app")
+	if appPath == "" {
+		appPath = "."
+	}
+
+	generator := manifest.NewGenerator(manifest.GenerateOptions{
+		AppPath:    appPath,
+		OutputPath: cmd.String("output"),
+		CopyTo:     cmd.String("copy-to"),
+		Format:     cmd.String("format"),
+		Verbose:    cmd.Bool("verbose"),
+	})
+
+	if err := generator.Generate(); err != nil {
+		return fmt.Errorf("generating manifest: %w", err)
+	}
+
+	fmt.Printf("Manifest generated: %s\n", cmd.String("output"))
+	if copyTo := cmd.String("copy-to"); copyTo != "" {
+		fmt.Printf("Migrations copied to: %s\n", copyTo)
+	}
+
+	return nil
 }
 
 func runMigrations(ctx context.Context, cmd *cli.Command, direction string) error {
