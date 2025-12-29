@@ -20,7 +20,7 @@ import (
 // Run executes the CLI application
 func Run(ctx context.Context, args []string) error {
 	app := &cli.Command{
-		Name:  "encore-migrate",
+		Name:  "encore-migrator",
 		Usage: "Run database migrations for Encore.dev applications",
 		Flags: []cli.Flag{
 			&cli.StringFlag{
