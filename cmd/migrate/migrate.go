@@ -29,6 +29,7 @@ func Run(ctx context.Context, args []string) error {
 				Aliases:  []string{"c"},
 				Usage:    "Path to InfraConfig JSON file",
 				Required: true,
+				Value:    "infra.config.json",
 			},
 			&cli.StringFlag{
 				Name:    "app",
